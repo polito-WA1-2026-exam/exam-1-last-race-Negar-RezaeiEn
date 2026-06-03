@@ -59,6 +59,60 @@ db.serialize(() => {
     score INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   )`);
+  
+  // --- SEEDING DATA ---
+
+  console.log('Inserting seed data...');
+
+  // 1. Insert Lines 
+  const lines = ['Red Line', 'Blue Line', 'Green Line', 'Yellow Line'];
+  const insertLine = db.prepare('INSERT OR IGNORE INTO lines (name) VALUES (?)');
+  lines.forEach(line => insertLine.run(line));
+  insertLine.finalize();
+
+  // 2. Insert Stations 
+  const stations = [
+    'Centrale', 'Porta Velaria', 'Crocevia del Falco', 'Piazza delle Lanterne', // Stations for Red Line
+    'Fontana Oscura', 'Borgo Sereno', 'Viale dei Mosaici', // Additional for Blue Line
+    'Torre Cinerea', 'Campo dell Eco', // Additional for Green Line
+    'Stazione Nord', 'Polo Sud', 'Oasi Ovest' // Extra stations to reach 12
+  ];
+  const insertStation = db.prepare('INSERT OR IGNORE INTO stations (name) VALUES (?)');
+  stations.forEach(station => insertStation.run(station));
+  insertStation.finalize();
+
+  // 3. Connect Stations to Lines
+  
+  const stationLines = [
+    // Red Line (Line ID 1)
+    { stationId: 1, lineId: 1 }, { stationId: 2, lineId: 1 }, { stationId: 3, lineId: 1 }, { stationId: 4, lineId: 1 },
+    // Blue Line (Line ID 2)
+    // Centrale (ID 1) is an interchange!
+    { stationId: 1, lineId: 2 }, { stationId: 5, lineId: 2 }, { stationId: 6, lineId: 2 }, { stationId: 7, lineId: 2 },
+    // Green Line (Line ID 3)
+    // Porta Velaria (ID 2) and Fontana Oscura (ID 5) are interchanges!
+    { stationId: 2, lineId: 3 }, { stationId: 5, lineId: 3 }, { stationId: 8, lineId: 3 }, { stationId: 9, lineId: 3 },
+    // Yellow Line (Line ID 4)
+    { stationId: 10, lineId: 4 }, { stationId: 11, lineId: 4 }, { stationId: 12, lineId: 4 }
+  ];
+  const insertStationLine = db.prepare('INSERT OR IGNORE INTO station_lines (station_id, line_id) VALUES (?, ?)');
+  stationLines.forEach(sl => insertStationLine.run(sl.stationId, sl.lineId));
+  insertStationLine.finalize();
+
+  // 4. Insert Events
+  const events = [
+    { desc: 'Quiet journey', effect: 0 },
+    { desc: 'Wrong platform', effect: -2 },
+    { desc: 'Kind passenger', effect: 1 },
+    { desc: 'Found a coin', effect: 3 },
+    { desc: 'Pickpocketed', effect: -4 },
+    { desc: 'Train delayed', effect: -1 },
+    { desc: 'Ticket inspector check, all good', effect: 2 },
+    { desc: 'Fell asleep, missed stop', effect: -3 }
+  ];
+  const insertEvent = db.prepare('INSERT OR IGNORE INTO events (description, effect) VALUES (?, ?)');
+  events.forEach(event => insertEvent.run(event.desc, event.effect));
+  insertEvent.finalize();
 
   console.log('All database tables have been created successfully.');
 });
