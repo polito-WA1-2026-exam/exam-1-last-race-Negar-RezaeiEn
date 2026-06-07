@@ -133,7 +133,7 @@ console.log('Inserting seed data...');
   console.log('Generating secure passwords and inserting users...');
   
   const users = [
-    { username: 'Negar', plainPassword: 'passWord123!' },
+    { username: 'Negar', plainPassword: 'passWord123' },
     { username: 'Sam', plainPassword: '123456789' },
     { username: 'Mike', plainPassword: '123456789' },
     { username: 'Bob', plainPassword: 'asdfg1245' }
