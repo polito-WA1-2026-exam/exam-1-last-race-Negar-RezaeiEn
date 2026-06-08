@@ -174,6 +174,68 @@ app.get('/api/games/ranking', isLoggedIn, async (req, res) => {
 });
 
 
+
+// --- GAME ENGINE API: Setup & Pathfinding ---
+
+app.get('/api/game/setup', isLoggedIn, (req, res) => {
+  // 1. Fetch all stations and connections (segments)
+  db.all('SELECT * FROM stations', [], (err, stations) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    db.all('SELECT * FROM segments', [], (err, segments) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      // 2. Build the Graph (Adjacency List)
+      // This allows the server to know exactly which station is connected to which
+      const graph = {};
+      stations.forEach(s => graph[s.id] = []); // Initialize empty arrays for each station
+      
+      segments.forEach(seg => {
+        // Since a metro line goes both ways, the graph is Undirected
+        graph[seg.station_a_id].push(seg.station_b_id);
+        graph[seg.station_b_id].push(seg.station_a_id); 
+      });
+
+      // 3. Pick a completely random Starting Station (Node A)
+      const startStation = stations[Math.floor(Math.random() * stations.length)];
+
+      // 4. Run Breadth-First Search (BFS) to calculate distances from Node A
+      const distances = {};
+      const queue = [startStation.id];
+      distances[startStation.id] = 0; // Distance to itself is 0
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        
+        graph[current].forEach(neighbor => {
+          if (distances[neighbor] === undefined) { // If not visited yet
+            distances[neighbor] = distances[current] + 1;
+            queue.push(neighbor);
+          }
+        });
+      }
+
+      // 5. Filter valid Targets: Must be at least 3 segments away
+      const validTargets = stations.filter(s => distances[s.id] >= 3);
+
+      if (validTargets.length === 0) {
+        return res.status(500).json({ error: "Network structure error: Could not find a station 3 segments away." });
+      }
+
+      // 6. Pick a random Target Station (Node B) from the valid options
+      const targetStation = validTargets[Math.floor(Math.random() * validTargets.length)];
+
+      // 7. Send the setup data back to the React frontend
+      res.json({
+        start: startStation,
+        target: targetStation,
+        minimum_distance: distances[targetStation.id],
+        coins: 20 // The project requires starting with 20 coins
+      });
+    });
+  });
+});
+
 // --- Start the Server ---
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);

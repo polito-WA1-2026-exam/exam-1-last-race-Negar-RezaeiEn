@@ -6,10 +6,10 @@ import { AuthProvider } from './AuthContext';
 import Navigation from './components/Navigation';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
+import Game from './components/Game';
 
 // --- Placeholder Components ---
 const Home = () => <h2>Welcome to Last Race! (Anonymous View)</h2>;
-const Game = () => <h2>Game Board (Protected View)</h2>;
 const Ranking = () => <h2>Leaderboard (Protected View)</h2>;
 const NotFound = () => <h2>404 - Page Not Found</h2>;
 
