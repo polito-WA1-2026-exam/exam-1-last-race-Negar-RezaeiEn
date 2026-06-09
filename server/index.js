@@ -177,63 +177,181 @@ app.get('/api/games/ranking', isLoggedIn, async (req, res) => {
 
 // --- GAME ENGINE API: Setup & Pathfinding ---
 
-app.get('/api/game/setup', isLoggedIn, (req, res) => {
-  // 1. Fetch all stations and connections (segments)
-  db.all('SELECT * FROM stations', [], (err, stations) => {
-    if (err) return res.status(500).json({ error: err.message });
+// --- GAME ENGINE API: Setup & Pathfinding ---
 
-    db.all('SELECT * FROM segments', [], (err, segments) => {
-      if (err) return res.status(500).json({ error: err.message });
+app.get('/api/game/setup', isLoggedIn, async (req, res) => {
+  try {
+    const db = await getDBConnection();
 
-      // 2. Build the Graph (Adjacency List)
-      // This allows the server to know exactly which station is connected to which
-      const graph = {};
-      stations.forEach(s => graph[s.id] = []); // Initialize empty arrays for each station
-      
-      segments.forEach(seg => {
-        // Since a metro line goes both ways, the graph is Undirected
-        graph[seg.station_a_id].push(seg.station_b_id);
-        graph[seg.station_b_id].push(seg.station_a_id); 
-      });
+    // 1. Fetch all stations and connections (segments)
+    const stations = await db.all('SELECT * FROM stations');
+    const segments = await db.all('SELECT * FROM segments');
 
-      // 3. Pick a completely random Starting Station (Node A)
-      const startStation = stations[Math.floor(Math.random() * stations.length)];
-
-      // 4. Run Breadth-First Search (BFS) to calculate distances from Node A
-      const distances = {};
-      const queue = [startStation.id];
-      distances[startStation.id] = 0; // Distance to itself is 0
-
-      while (queue.length > 0) {
-        const current = queue.shift();
-        
-        graph[current].forEach(neighbor => {
-          if (distances[neighbor] === undefined) { // If not visited yet
-            distances[neighbor] = distances[current] + 1;
-            queue.push(neighbor);
-          }
-        });
-      }
-
-      // 5. Filter valid Targets: Must be at least 3 segments away
-      const validTargets = stations.filter(s => distances[s.id] >= 3);
-
-      if (validTargets.length === 0) {
-        return res.status(500).json({ error: "Network structure error: Could not find a station 3 segments away." });
-      }
-
-      // 6. Pick a random Target Station (Node B) from the valid options
-      const targetStation = validTargets[Math.floor(Math.random() * validTargets.length)];
-
-      // 7. Send the setup data back to the React frontend
-      res.json({
-        start: startStation,
-        target: targetStation,
-        minimum_distance: distances[targetStation.id],
-        coins: 20 // The project requires starting with 20 coins
-      });
+    // 2. Build the Graph (Adjacency List)
+    const graph = {};
+    stations.forEach(s => graph[s.id] = []); 
+    
+    segments.forEach(seg => {
+      graph[seg.station_a_id].push(seg.station_b_id);
+      graph[seg.station_b_id].push(seg.station_a_id); 
     });
-  });
+
+    // 3. Pick a completely random Starting Station (Node A)
+    const startStation = stations[Math.floor(Math.random() * stations.length)];
+
+    // 4. Run Breadth-First Search (BFS) to calculate distances
+    const distances = {};
+    const queue = [startStation.id];
+    distances[startStation.id] = 0; 
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      
+      graph[current].forEach(neighbor => {
+        if (distances[neighbor] === undefined) { 
+          distances[neighbor] = distances[current] + 1;
+          queue.push(neighbor);
+        }
+      });
+    }
+
+    // 5. Filter valid Targets: Must be at least 3 segments away
+    const validTargets = stations.filter(s => distances[s.id] >= 3);
+
+    if (validTargets.length === 0) {
+      return res.status(500).json({ error: "Network structure error: Could not find a station 3 segments away." });
+    }
+
+    // 6. Pick a random Target Station (Node B)
+    const targetStation = validTargets[Math.floor(Math.random() * validTargets.length)];
+
+    // --- NEW: Format and Shuffle Segments for the Frontend ---
+   
+    let formattedSegments = segments.map(seg => {
+      const stationA = stations.find(s => s.id === seg.station_a_id).name;
+      const stationB = stations.find(s => s.id === seg.station_b_id).name;
+      return {
+        id: seg.id,
+        name: `${stationA} ↔ ${stationB}`,
+        station_a_id: seg.station_a_id, 
+        station_b_id: seg.station_b_id
+      };
+    });
+
+ 
+    formattedSegments = formattedSegments.sort(() => Math.random() - 0.5);
+
+    // 7. Send the setup data back to the React frontend
+    res.json({
+      start: startStation,
+      target: targetStation,
+      minimum_distance: distances[targetStation.id],
+      coins: 20, 
+      segments: formattedSegments 
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- GAME ENGINE API: Route Validation & Execution ---
+
+app.post('/api/game/execute', isLoggedIn, async (req, res) => {
+  try {
+    const { startStationId, targetStationId, selectedSegmentIds } = req.body;
+
+    
+    if (!selectedSegmentIds || selectedSegmentIds.length === 0) {
+      return res.json({ valid: false, message: "No route selected. You lost 20 coins!", finalCoins: 0 });
+    }
+
+    const db = await getDBConnection();
+
+  
+    const placeholders = selectedSegmentIds.map(() => '?').join(',');
+    const segments = await db.all(`SELECT * FROM segments WHERE id IN (${placeholders})`, selectedSegmentIds);
+
+    if (segments.length !== selectedSegmentIds.length) {
+      return res.status(400).json({ error: "Invalid segment data." });
+    }
+
+
+    let currentNode = startStationId;
+    let unvisitedSegments = [...segments];
+
+    while (currentNode !== targetStationId) {
+
+      const nextSegmentIndex = unvisitedSegments.findIndex(seg => 
+        seg.station_a_id === currentNode || seg.station_b_id === currentNode
+      );
+
+      if (nextSegmentIndex === -1) {
+ 
+        return res.json({ valid: false, message: "Route is disconnected! Train crashed. You lost all coins.", finalCoins: 0 });
+      }
+
+      const segment = unvisitedSegments[nextSegmentIndex];
+      pathTraversed.push(segment);
+
+      currentNode = (segment.station_a_id === currentNode) ? segment.station_b_id : segment.station_a_id;
+
+      unvisitedSegments.splice(nextSegmentIndex, 1);
+    }
+
+
+    if (unvisitedSegments.length > 0) {
+      return res.json({ valid: false, message: "Route contains extra/branching detours! Invalid path. You lost all coins.", finalCoins: 0 });
+    }
+
+
+    const allEvents = await db.all('SELECT * FROM events');
+    const goodEvents = allEvents.filter(e => e.effect >= 0);
+    const badEvents = allEvents.filter(e => e.effect < 0);
+
+    let currentCoins = 20;
+    let journeyLog = []; 
+
+    for (let i = 0; i < pathTraversed.length; i++) {
+      let chosenEvent;
+      
+
+      if (i >= 4) {
+        if (Math.random() < 0.7 && badEvents.length > 0) {
+          chosenEvent = badEvents[Math.floor(Math.random() * badEvents.length)];
+        } else {
+          chosenEvent = goodEvents[Math.floor(Math.random() * goodEvents.length)];
+        }
+      } else {
+
+        chosenEvent = allEvents[Math.floor(Math.random() * allEvents.length)];
+      }
+
+      currentCoins += chosenEvent.effect;
+      
+
+      journeyLog.push({
+        step: i + 1,
+        event: chosenEvent.description,
+        effect: chosenEvent.effect,
+        coinsAfter: currentCoins
+      });
+    }
+
+
+    await db.run('INSERT INTO games (user_id, score) VALUES (?, ?)', [req.user.id, currentCoins]);
+
+
+    res.json({
+      valid: true,
+      message: "Journey completed successfully!",
+      finalCoins: currentCoins,
+      log: journeyLog
+    });
+
+  } catch (err) {
+    console.error("Execution API Error:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- Start the Server ---
