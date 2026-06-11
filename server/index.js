@@ -278,6 +278,7 @@ app.post('/api/game/execute', isLoggedIn, async (req, res) => {
 
     let currentNode = startStationId;
     let unvisitedSegments = [...segments];
+    let pathTraversed = [];
 
     while (currentNode !== targetStationId) {
 
