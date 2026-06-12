@@ -11,21 +11,8 @@ import Navigation from './components/Navigation';
 import Login from './components/Login';
 import Game from './components/Game';
 import Ranking from './components/Ranking';
+import Home from './components/Home';
 
-// --- Placeholder Components (Upgraded with Bootstrap UI) ---
-const Home = () => (
-  <div className="text-center mt-5">
-    <h1 className="display-4 fw-bold">🚇 Welcome to The Last Race</h1>
-    <p className="lead text-muted mt-3">
-      Navigate the underground network, avoid events, and reach your destination.
-    </p>
-    <div className="mt-4">
-      <Button variant="primary" size="lg" href="/login">
-        Login to Start Playing
-      </Button>
-    </div>
-  </div>
-);
 
 const NotFound = () => (
   <div className="text-center mt-5">

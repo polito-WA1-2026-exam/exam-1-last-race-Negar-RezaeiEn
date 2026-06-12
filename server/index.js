@@ -161,11 +161,18 @@ app.get('/api/games/ranking', isLoggedIn, async (req, res) => {
   try {
     const db = await getDBConnection();
     const rankingQuery = `
-      SELECT users.username, games.score 
+      SELECT 
+        users.username, 
+        CASE 
+          WHEN MAX(games.score) < 0 THEN 0 
+          ELSE MAX(games.score) 
+        END AS score 
       FROM games 
       JOIN users ON games.user_id = users.id 
-      ORDER BY games.score DESC
+      GROUP BY users.id 
+      ORDER BY score DESC
     `;
+    
     const ranking = await db.all(rankingQuery);
     res.status(200).json(ranking);
   } catch (err) {

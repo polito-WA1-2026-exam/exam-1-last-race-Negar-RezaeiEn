@@ -60,10 +60,10 @@ const Game = () => {
   };
 
   // Function executed when the countdown reaches zero
-  const handleTimeUp = () => {
-    alert("Time is up! Executing whatever route you have planned so far...");
-    handleExecuteRoute();
-  };
+ const handleTimeUp = () => {
+  alert("Time is up! Executing whatever route you have planned so far...");
+  handleExecuteRoute();
+};
 
   // --- NEW: Execute Route API Call (The Server Referee) ---
   const handleExecuteRoute = async () => {

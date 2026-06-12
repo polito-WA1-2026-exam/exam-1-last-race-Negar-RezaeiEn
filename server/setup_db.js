@@ -153,6 +153,22 @@ db.serialize(() => {
     { username: 'Sam', plainPassword: '123456789' },
     { username: 'Mike', plainPassword: '123456789' }
   ];
+
+  // 7. Insert Initial Game Records (To satisfy the requirement of pre-existing games)
+  console.log('Inserting initial game records for leaderboard...');
+  
+  // فرض می‌کنیم Sam (آیدی 2) و Mike (آیدی 3) قبلاً بازی کرده‌اند
+  const initialGames = [
+    { userId: 2, score: 15 }, // رکورد اول Sam
+    { userId: 2, score: 8 },  // رکورد دوم Sam
+    { userId: 3, score: 22 }, // رکورد اول Mike
+    { userId: 3, score: -5 }  // رکورد دوم Mike (بدشانسی آورده!)
+  ];
+
+  // وارد کردن اطلاعات در جدول games
+  const insertGame = db.prepare('INSERT INTO games (user_id, score) VALUES (?, ?)');
+  initialGames.forEach(game => insertGame.run(game.userId, game.score));
+  insertGame.finalize();
   const insertUser = db.prepare('INSERT OR IGNORE INTO users (username, password, salt) VALUES (?, ?, ?)');
   users.forEach(user => {
     const salt = bcrypt.genSaltSync(10);
