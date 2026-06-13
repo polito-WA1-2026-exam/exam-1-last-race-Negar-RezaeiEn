@@ -1,0 +1,20 @@
+/* 1. Import Poppins font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* 2. Override Bootstrap's default font variables */
+:root {
+  --bs-font-sans-serif: 'Poppins', sans-serif;
+  --bs-body-font-family: 'Poppins', sans-serif;
+}
+
+/* 3. Apply globally to the body */
+body {
+  font-family: 'Poppins', sans-serif !important;
+  background-color: #f8f9fa; /* Adds a very soft, modern gray background to the whole app */
+}
+
+/* Optional: Make all buttons use the bold version of the font */
+.btn {
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+}

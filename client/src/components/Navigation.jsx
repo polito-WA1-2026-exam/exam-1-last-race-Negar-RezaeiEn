@@ -4,45 +4,58 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
 
 const Navigation = () => {
-  // 1. Get user data and logout function from the Context
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 2. Handle the logout process and redirect to home
   const handleLogout = async () => {
     await logout();
-    navigate('/'); // Redirect to the anonymous home page
+    navigate('/'); 
   };
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
-      <Container>
-        <Navbar.Brand as={Link} to="/">🚇 Last Race</Navbar.Brand>
+    <Navbar bg="dark" variant="dark" expand="lg" className="mb-4 py-3 shadow-sm">
+      <Container fluid className="px-4">
+        
+        <Navbar.Brand as={Link} to="/" className="fs-4 fw-bold">🚇 Last Race</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto">
+          <Nav className="me-auto ms-4">
             <Nav.Link as={Link} to="/">Home</Nav.Link>
-            
-            {/* 3. ALWAYS show these links for discoverability. 
-                Security is handled by the ProtectedRoute component! */}
-            <Nav.Link as={Link} to="/game">Play Game</Nav.Link>
-            <Nav.Link as={Link} to="/ranking">Ranking</Nav.Link>
+            {user && (
+              <>
+                <Nav.Link as={Link} to="/game">Play Game</Nav.Link>
+                <Nav.Link as={Link} to="/ranking">Ranking</Nav.Link>
+              </>
+            )}
           </Nav>
           
           <Nav>
-            {/* 4. Conditional Rendering: User Profile vs Login Button */}
             {user ? (
               <div className="d-flex align-items-center">
-                <Navbar.Text className="me-3 text-white">
+                <Navbar.Text className="me-3 text-white d-flex align-items-center">
+                  {/* آیکون آدمک سفید برای کاربر لاگین شده */}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="me-2" viewBox="0 0 16 16">
+                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                    <path fillRule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                  </svg>
                   Welcome, <strong>{user.username}</strong>
                 </Navbar.Text>
-                <Button variant="outline-danger" size="sm" onClick={handleLogout}>
+                
+                {/* تغییر استایل دکمه خروج به قرمز توپر با نوشته سفید */}
+                <Button variant="danger" size="sm" onClick={handleLogout} className="rounded-pill px-3 fw-bold">
                   Logout
                 </Button>
               </div>
             ) : (
-              <Nav.Link as={Link} to="/login">Login</Nav.Link>
+              <Nav.Link as={Link} to="/login" className="d-flex align-items-center fw-bold text-white">
+                {/* آیکون آدمک سفید برای دکمه لاگین */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="me-2" viewBox="0 0 16 16">
+                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                  <path fillRule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                </svg>
+                Login
+              </Nav.Link>
             )}
           </Nav>
         </Navbar.Collapse>
