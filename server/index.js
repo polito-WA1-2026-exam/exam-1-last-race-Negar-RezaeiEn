@@ -229,11 +229,30 @@ app.get('/api/game/setup', isLoggedIn, async (req, res) => {
       return res.status(500).json({ error: "Network structure error: Could not find a station 3 segments away." });
     }
 
-    // 6. Pick a random Target Station (Node B)
+// 6. Pick a random Target Station (Node B)
     const targetStation = validTargets[Math.floor(Math.random() * validTargets.length)];
 
-    // --- NEW: Format and Shuffle Segments for the Frontend ---
-   
+    // --- NEW: Fetch lines from DB to build an organized map ---
+    const lines = await db.all('SELECT * FROM lines');
+    
+    const networkMap = lines.map(line => {
+      // Find all segments that belong to this specific line
+      const lineSegments = segments.filter(seg => seg.line_id === line.id);
+      
+      // Format them nicely: "Station A ↔ Station B"
+      const connections = lineSegments.map(seg => {
+        const stA = stations.find(s => s.id === seg.station_a_id).name;
+        const stB = stations.find(s => s.id === seg.station_b_id).name;
+        return `${stA} ↔ ${stB}`;
+      });
+      
+      return {
+        lineName: line.name,
+        connections: connections
+      };
+    });
+
+    // --- Format and Shuffle Segments ONLY for the Playable Buttons ---
     let formattedSegments = segments.map(seg => {
       const stationA = stations.find(s => s.id === seg.station_a_id).name;
       const stationB = stations.find(s => s.id === seg.station_b_id).name;
@@ -244,18 +263,21 @@ app.get('/api/game/setup', isLoggedIn, async (req, res) => {
         station_b_id: seg.station_b_id
       };
     });
-
- 
+    // Shuffle the buttons so planning is challenging
     formattedSegments = formattedSegments.sort(() => Math.random() - 0.5);
 
-    // 7. Send the setup data back to the React frontend
+    // 7. Send ALL required data back to React
     res.json({
       start: startStation,
       target: targetStation,
       minimum_distance: distances[targetStation.id],
       coins: 20, 
-      segments: formattedSegments 
+      segments: formattedSegments, // The shuffled buttons
+      stations: stations,          // For the blind memory map
+      networkMap: networkMap       // ✅ The organized lines for the visual map
     });
+
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

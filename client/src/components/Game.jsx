@@ -11,14 +11,15 @@ const Game = () => {
   
   const [selectedSegments, setSelectedSegments] = useState([]);
   
-  // --- NEW: Execution and Result Phase States ---
-  const [isExecuting, setIsExecuting] = useState(false); // Controls button spinner during server submission
-  const [journeyResult, setJourneyResult] = useState(null); // Stores the final outcome received from the backend
+  // --- Execution and Result Phase States ---
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [journeyResult, setJourneyResult] = useState(null);
 
-  useEffect(() => {
+useEffect(() => {
     const initializeGame = async () => {
       try {
         const response = await fetch('http://localhost:3001/api/game/setup', {
+          cache: 'no-store', 
           credentials: 'include'
         });
         if (!response.ok) throw new Error('Failed to start the game engine.');
@@ -33,7 +34,6 @@ const Game = () => {
     };
     initializeGame();
   }, []);
-
   useEffect(() => {
     let timer;
     if (phase === 'PLANNING' && timeLeft > 0) {
@@ -42,7 +42,7 @@ const Game = () => {
       }, 1000);
     } else if (timeLeft === 0 && phase === 'PLANNING') {
       clearInterval(timer);
-      handleTimeUp(); // Automatically submit the current (likely incomplete) route to apply penalties
+      handleTimeUp(); // Automatically submit the current (likely incomplete) route
     }
     return () => clearInterval(timer);
   }, [phase, timeLeft]);
@@ -60,12 +60,12 @@ const Game = () => {
   };
 
   // Function executed when the countdown reaches zero
- const handleTimeUp = () => {
-  alert("Time is up! Executing whatever route you have planned so far...");
-  handleExecuteRoute();
-};
+  const handleTimeUp = () => {
+    console.log("⏰ Time is up! Auto-submitting incomplete route...");
+    handleExecuteRoute();
+  };
 
-  // --- NEW: Execute Route API Call (The Server Referee) ---
+  // --- Execute Route API Call (The Server Referee) ---
   const handleExecuteRoute = async () => {
     setIsExecuting(true);
     try {
@@ -84,7 +84,7 @@ const Game = () => {
 
       const resultData = await response.json();
       setJourneyResult(resultData);
-      setPhase('RESULT'); // Transition UI to the Result phase
+      setPhase('RESULT'); 
 
     } catch (err) {
       console.error(err);
@@ -119,7 +119,7 @@ const Game = () => {
     <Container className="mt-5">
       <Row className="mb-4">
         <Col>
-          <h2 className="text-center">🚇 The Last Race</h2>
+          <h2 className="text-center fw-bold">🚇 The Last Race</h2>
         </Col>
       </Row>
 
@@ -147,25 +147,81 @@ const Game = () => {
         </Card.Body>
       </Card>
 
+      {/* --- SETUP PHASE --- */}
       {phase === 'SETUP' && (
-        <div className="text-center">
-          <Alert variant="info">
-            Memorize your starting point and destination. When ready, start the timer to plan your route!
+        <div className="text-center mt-4">
+          <Alert variant="info" className="fs-5 shadow-sm">
+            <strong>Phase 1: Memorize the Network!</strong><br/>
+            Study the network map below. When ready, start the timer to plan your route!
           </Alert>
-          <Button variant="success" size="lg" onClick={handleStartPlanning}>
-            Start Planning (90s)
+          
+          {/* Full Network Map */}
+          {/* ✅ Organized Network Map (Grouped by Lines) */}
+          <Card className="mb-4 shadow-sm border-secondary text-start">
+            <Card.Header className="bg-secondary text-white">
+              <strong>🗺️ Full Network Map (Lines & Connections)</strong>
+            </Card.Header>
+            <Card.Body>
+              {gameData?.networkMap && gameData.networkMap.map((lineData, index) => {
+          
+                let badgeColor = "secondary";
+                const nameStr = lineData.lineName.toLowerCase();
+                if (nameStr.includes('red')) badgeColor = "danger";
+                else if (nameStr.includes('blue')) badgeColor = "primary";
+                else if (nameStr.includes('green')) badgeColor = "success";
+                else if (nameStr.includes('yellow')) badgeColor = "warning text-dark";
+
+                return (
+                  <div key={index} className="mb-4">
+                    <h5 className="fw-bold border-bottom pb-2">
+                      🚇 {lineData.lineName}
+                    </h5>
+                    <div className="d-flex flex-wrap gap-2 mt-2">
+                      {lineData.connections.map((conn, idx) => (
+                        <Badge bg={badgeColor} key={idx} className="p-2 fs-6 fw-normal shadow-sm">
+                          {conn}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </Card.Body>
+          </Card>
+
+          <Button variant="success" size="lg" className="rounded-pill px-5 py-3 fw-bold shadow" onClick={handleStartPlanning}>
+            Start Planning (90s) ⏱️
           </Button>
         </div>
       )}
 
+      {/* --- PLANNING PHASE --- */}
       {phase === 'PLANNING' && (
-        <div className="text-center">
+        <div className="text-center mt-4">
           <h1 className={`display-1 fw-bold ${timeLeft <= 10 ? 'text-danger' : 'text-dark'}`}>
             ⏱️ {timeLeft}s
           </h1>
           <hr />
+          
+          {/* Blind Map (Only Stations) */}
+          <Card className="mb-4 shadow-sm border-warning text-start">
+            <Card.Header className="bg-warning text-dark">
+              <strong>🗺️ Network Map (Memory Mode)</strong>
+            </Card.Header>
+            <Card.Body>
+              <p className="text-muted small mb-2">The connecting lines have been hidden. Rely on your memory!</p>
+              <div className="d-flex flex-wrap gap-2">
+                {gameData?.stations && gameData.stations.map(station => (
+                  <Badge bg="secondary" key={`blind-station-${station.id}`} className="p-2 fw-normal fs-6">
+                    {station.name}
+                  </Badge>
+                ))}
+              </div>
+            </Card.Body>
+          </Card>
+
           <h4>Route Builder</h4>
-          <p className="text-muted">
+          <p className="text-muted mb-4">
             Select the connections to build your route from <strong>{gameData.start.name}</strong> to <strong>{gameData.target.name}</strong>.
           </p>
 
@@ -191,9 +247,10 @@ const Game = () => {
               size="lg" 
               disabled={selectedSegments.length === 0 || isExecuting}
               onClick={handleExecuteRoute}
+              className="px-5 py-3 rounded-pill fw-bold"
             >
               {isExecuting ? (
-                <><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> Executing...</>
+                <><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2"/> Executing...</>
               ) : (
                 'Confirm Route & Execute 🚀'
               )}
@@ -202,17 +259,16 @@ const Game = () => {
         </div>
       )}
 
-      {/* --- NEW: Result UI and Journey Event Log --- */}
+      {/* --- RESULT PHASE --- */}
       {phase === 'RESULT' && journeyResult && (
         <div className="mt-4">
-          <Alert variant={journeyResult.valid ? "success" : "danger"} className="text-center">
+          <Alert variant={journeyResult.valid ? "success" : "danger"} className="text-center shadow-sm">
             <Alert.Heading>{journeyResult.valid ? "🎉 Mission Accomplished!" : "💥 Mission Failed!"}</Alert.Heading>
             <p className="fs-5">{journeyResult.message}</p>
             <hr />
             <h4 className="mb-0">Final Coins: <strong>{journeyResult.finalCoins}</strong></h4>
           </Alert>
 
-          {/* Render the journey log only if the route was completely valid */}
           {journeyResult.valid && journeyResult.log && journeyResult.log.length > 0 && (
             <Card className="mt-4 shadow-sm">
               <Card.Header className="bg-info text-white"><strong>📝 Journey Log</strong></Card.Header>
@@ -232,7 +288,7 @@ const Game = () => {
           )}
 
           <div className="text-center mt-4 mb-5">
-            <Button variant="primary" size="lg" onClick={() => window.location.reload()}>
+            <Button variant="primary" size="lg" onClick={() => window.location.reload()} className="px-5 py-3 rounded-pill fw-bold">
               🔄 Play Again
             </Button>
           </div>

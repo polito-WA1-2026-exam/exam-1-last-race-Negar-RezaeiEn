@@ -14,33 +14,41 @@ const Home = () => {
             </Card.Header>
             
             <Card.Body className="p-4 p-md-5 bg-light">
-              <h3 className="mb-4 text-center text-primary fw-bold">📜 How to Play (Rules)</h3>
+              <h3 className="mb-4 text-center text-primary fw-bold">📜 Mission Rules & Guidelines</h3>
               
               <ListGroup variant="flush" className="fs-5 shadow-sm rounded-3">
                 <ListGroup.Item className="py-3">
-                  <strong>⏱️ The Clock is Ticking:</strong> You have exactly <span className="text-danger fw-bold">90 seconds</span> to plan and execute your route. If time runs out, an incomplete route will be submitted!
+                  <strong>🎯 The Mission:</strong> You start with <span className="text-warning fw-bold">20 Coins</span>. You will be assigned a random <span className="text-success fw-bold">Start</span> and <span className="text-danger fw-bold">Destination</span> station, which are guaranteed to be at least 3 stops apart.
+                </ListGroup.Item>
+
+                <ListGroup.Item className="py-3">
+                  <strong>🧠 Phase 1 - Memorization:</strong> Before the timer starts, you will see the full network map showing all lines and connections. Study it carefully!
                 </ListGroup.Item>
                 
                 <ListGroup.Item className="py-3">
-                  <strong>🗺️ Mission Briefing:</strong> You will be assigned a random <span className="text-success fw-bold">Start</span> station and a <span className="text-danger fw-bold">Destination</span> station.
+                  <strong>⏱️ Phase 2 - Blind Planning:</strong> Once you start, the connecting lines disappear! You have exactly <span className="text-danger fw-bold">90 seconds</span> to rebuild your route from memory by selecting the correct segments. 
                 </ListGroup.Item>
                 
                 <ListGroup.Item className="py-3">
-                  <strong>🔗 Unbroken Chain:</strong> Click on the segments to build a continuous path. <br/>
-                  <small className="text-muted">⚠️ Warning: Selecting disconnected segments, dead ends, or extra branches will result in a crash and 0 coins!</small>
+                  <strong>⚠️ Strict Network Rules:</strong> 
+                  <ul className="mt-2 mb-0 fs-6 text-muted">
+                    <li>The route must be a continuous chain from Start to Destination.</li>
+                    <li>You can ONLY change lines at valid <strong>Interchange Stations</strong>.</li>
+                    <li>Selecting disconnected segments or running out of time results in a crash and <strong>0 coins</strong>!</li>
+                  </ul>
                 </ListGroup.Item>
                 
                 <ListGroup.Item className="py-3">
-                  <strong>🎲 Random Events:</strong> Traveling through 5 or more stations increases the chance of unexpected encounters. Some give you coins, others steal them!
+                  <strong>🎲 Random Events:</strong> Every segment you travel through triggers a probabilistic event. Kind passengers might give you coins (+), while pickpockets or wrong platforms will cost you (-).
                 </ListGroup.Item>
                 
                 <ListGroup.Item className="py-3">
-                  <strong>🏆 Leaderboard:</strong> Survive the journey with the most coins to rank up globally.
+                  <strong>🏆 Global Leaderboard:</strong> Survive the journey with the highest remaining coins to rank up globally against other agents.
                 </ListGroup.Item>
               </ListGroup>
 
               <div className="d-grid gap-2 col-md-8 mx-auto mt-5">
-                <Button as={Link} to="/login" variant="success" size="lg" className="py-3 fw-bold shadow">
+                <Button as={Link} to="/login" variant="success" size="lg" className="py-3 fw-bold shadow rounded-pill">
                   Access Control Room to Play 🚀
                 </Button>
               </div>
