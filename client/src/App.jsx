@@ -13,7 +13,6 @@ import Game from './components/Game';
 import Ranking from './components/Ranking';
 import Home from './components/Home';
 
-
 const NotFound = () => (
   <div className="text-center mt-5">
     <h1 className="display-1 fw-bold text-danger">404</h1>
@@ -37,6 +36,7 @@ function App() {
         <Container className="mb-5">
           <Routes>
             {/* --- Public Routes --- */}
+            {/* FIXED: Removed the undefined 'loggedIn' prop. Home will handle its own state securely. */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             
@@ -62,7 +62,6 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Container>
-
       </BrowserRouter>
     </AuthProvider>
   );

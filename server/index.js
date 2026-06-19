@@ -184,8 +184,6 @@ app.get('/api/games/ranking', isLoggedIn, async (req, res) => {
 
 // --- GAME ENGINE API: Setup & Pathfinding ---
 
-// --- GAME ENGINE API: Setup & Pathfinding ---
-
 app.get('/api/game/setup', isLoggedIn, async (req, res) => {
   try {
     const db = await getDBConnection();
@@ -285,55 +283,65 @@ app.get('/api/game/setup', isLoggedIn, async (req, res) => {
 
 // --- GAME ENGINE API: Route Validation & Execution ---
 
+// --- GAME ENGINE API: Route Validation & Execution ---
+
 app.post('/api/game/execute', isLoggedIn, async (req, res) => {
   try {
     const { startStationId, targetStationId, selectedSegmentIds } = req.body;
-
     
+    // Connect to the database at the very beginning
+    const db = await getDBConnection(); 
+
+    // Helper function to record a 0 score penalty in the database
+    const saveZeroScore = async () => {
+      await db.run('INSERT INTO games (user_id, score) VALUES (?, ?)', [req.user.id, 0]);
+    };
+
+    // 1. Check if the submitted route is empty
     if (!selectedSegmentIds || selectedSegmentIds.length === 0) {
+      await saveZeroScore(); // Record score as 0 for failing to submit a route
       return res.json({ valid: false, message: "No route selected. You lost 20 coins!", finalCoins: 0 });
     }
 
-    const db = await getDBConnection();
-
-  
     const placeholders = selectedSegmentIds.map(() => '?').join(',');
     const segments = await db.all(`SELECT * FROM segments WHERE id IN (${placeholders})`, selectedSegmentIds);
 
+    // Ensure no invalid or manipulated segment IDs were sent
     if (segments.length !== selectedSegmentIds.length) {
+      await saveZeroScore();
       return res.status(400).json({ error: "Invalid segment data." });
     }
 
-
+    // 2. Traverse and validate the route graph (Unbroken Chain Rule)
     let currentNode = startStationId;
     let unvisitedSegments = [...segments];
     let pathTraversed = [];
 
     while (currentNode !== targetStationId) {
-
       const nextSegmentIndex = unvisitedSegments.findIndex(seg => 
         seg.station_a_id === currentNode || seg.station_b_id === currentNode
       );
 
       if (nextSegmentIndex === -1) {
- 
+        await saveZeroScore(); // Record score as 0 due to a disconnected route
         return res.json({ valid: false, message: "Route is disconnected! Train crashed. You lost all coins.", finalCoins: 0 });
       }
 
       const segment = unvisitedSegments[nextSegmentIndex];
       pathTraversed.push(segment);
 
+      // Move to the next node in the graph
       currentNode = (segment.station_a_id === currentNode) ? segment.station_b_id : segment.station_a_id;
-
       unvisitedSegments.splice(nextSegmentIndex, 1);
     }
 
-
+    // 3. Check for extra branches or detours (Strict Validation)
     if (unvisitedSegments.length > 0) {
+      await saveZeroScore(); // Record score as 0 due to invalid branching
       return res.json({ valid: false, message: "Route contains extra/branching detours! Invalid path. You lost all coins.", finalCoins: 0 });
     }
 
-
+    // 4. Calculate random events for the valid route
     const allEvents = await db.all('SELECT * FROM events');
     const goodEvents = allEvents.filter(e => e.effect >= 0);
     const badEvents = allEvents.filter(e => e.effect < 0);
@@ -343,8 +351,8 @@ app.post('/api/game/execute', isLoggedIn, async (req, res) => {
 
     for (let i = 0; i < pathTraversed.length; i++) {
       let chosenEvent;
-      
 
+      // Apply probabilistic rules based on journey length
       if (i >= 4) {
         if (Math.random() < 0.7 && badEvents.length > 0) {
           chosenEvent = badEvents[Math.floor(Math.random() * badEvents.length)];
@@ -352,13 +360,11 @@ app.post('/api/game/execute', isLoggedIn, async (req, res) => {
           chosenEvent = goodEvents[Math.floor(Math.random() * goodEvents.length)];
         }
       } else {
-
         chosenEvent = allEvents[Math.floor(Math.random() * allEvents.length)];
       }
 
       currentCoins += chosenEvent.effect;
       
-
       journeyLog.push({
         step: i + 1,
         event: chosenEvent.description,
@@ -367,14 +373,16 @@ app.post('/api/game/execute', isLoggedIn, async (req, res) => {
       });
     }
 
+    // --- Apply the document rule to floor negative scores at 0 ---
+    let finalValidCoins = currentCoins < 0 ? 0 : currentCoins;
 
-    await db.run('INSERT INTO games (user_id, score) VALUES (?, ?)', [req.user.id, currentCoins]);
-
+    // 5. Save the final calculated score
+    await db.run('INSERT INTO games (user_id, score) VALUES (?, ?)', [req.user.id, finalValidCoins]);
 
     res.json({
       valid: true,
       message: "Journey completed successfully!",
-      finalCoins: currentCoins,
+      finalCoins: finalValidCoins,
       log: journeyLog
     });
 
@@ -383,6 +391,7 @@ app.post('/api/game/execute', isLoggedIn, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // --- Start the Server ---
 app.listen(port, () => {
