@@ -123,21 +123,24 @@ const Game = () => {
     if (!gameData?.stations) return {};
     
     const layout = {
-      'Massaua': { x: 10, y: 15 },
-      'Rivoli': { x: 25, y: 15 },
-      'Racconigi': { x: 40, y: 15 },
-      'Bernini': { x: 55, y: 15 },
-      'Principi d\'Acaja': { x: 70, y: 15 },
-      'Porta Susa': { x: 85, y: 15 },
-      'Vinzaglio': { x: 85, y: 45 },
-      'Re Umberto': { x: 70, y: 45 },
-      'Porta Nuova': { x: 55, y: 45 },
-      'Marconi': { x: 40, y: 45 },
-      'Nizza': { x: 25, y: 45 },
-      'Spezia': { x: 10, y: 45 },
-      'Lingotto': { x: 10, y: 75 },
-      'Politecnico': { x: 70, y: 80 },
-      'Piazza Castello': { x: 55, y: 80 }
+      'Massaua': { x: 10, y: 20 },
+      'Rivoli': { x: 25, y: 20 },
+      'Racconigi': { x: 40, y: 20 },
+      'Bernini': { x: 55, y: 20 },
+      'Principi d\'Acaja': { x: 70, y: 20 },
+      'Porta Susa': { x: 85, y: 20 },
+
+      // Shifted Re Umberto out of the direct line between Porta Nuova and Vinzaglio!
+      'Vinzaglio': { x: 85, y: 50 },
+      'Porta Nuova': { x: 55, y: 50 },
+      'Marconi': { x: 40, y: 50 },
+      'Nizza': { x: 25, y: 50 },
+      'Spezia': { x: 10, y: 50 },
+
+      'Re Umberto': { x: 70, y: 70 }, 
+      'Lingotto': { x: 10, y: 80 },
+      'Politecnico': { x: 70, y: 85 },
+      'Piazza Castello': { x: 55, y: 85 }
     };
 
     const coords = {};
@@ -170,7 +173,7 @@ const Game = () => {
       : gameData.segments;
 
     return (
-      <div className="w-100 position-relative mb-4 bg-light shadow-sm" style={{ height: '400px', border: '2px solid #343a40', borderRadius: '8px', overflow: 'hidden' }}>
+      <div className="w-100 position-relative mb-4 bg-white shadow-sm" style={{ height: '400px', border: '3px dashed #c2dbfe', borderRadius: '24px', overflow: 'hidden' }}>
         <svg width="100%" height="100%">
           {segmentsToDraw.map(seg => {
             const start = stationCoords[seg.station_a_id];
@@ -201,11 +204,11 @@ const Game = () => {
             const isTarget = phase === 'PLANNING' && station.id === gameData?.target?.id;
             
             let circleColor = "#fff";
-            let strokeColor = "#343a40";
-            let radius = "7";
+            let strokeColor = "#6ea8fe"; 
+            let radius = "8";
             
-            if (isStart) { strokeColor = "#198754"; radius = "10"; circleColor = "#e8f5e9"; }
-            if (isTarget) { strokeColor = "#dc3545"; radius = "10"; circleColor = "#ffebee"; }
+            if (isStart) { strokeColor = "#198754"; radius = "12"; circleColor = "#e8f5e9"; }
+            if (isTarget) { strokeColor = "#dc3545"; radius = "12"; circleColor = "#ffebee"; }
 
             return (
               <g key={station.id}>
@@ -216,10 +219,10 @@ const Game = () => {
                 />
                 <circle cx={`${coords.x}%`} cy={`${coords.y}%`} r="3" fill={strokeColor} />
                 <text 
-                  x={`${coords.x}%`} y={`${coords.y - 4}%`} 
+                  x={`${coords.x}%`} y={`${coords.y - 5}%`} 
                   textAnchor="middle" fontSize={isStart || isTarget ? "14" : "12"} 
-                  fontWeight="bold" fill="#212529"
-                  style={{ textShadow: "1px 1px 2px #fff, -1px -1px 2px #fff" }}
+                  fontWeight="600" fill="#495057"
+                  style={{ textShadow: "2px 2px 4px #fff, -2px -2px 4px #fff" }}
                 >
                   {station.name}
                 </text>
@@ -231,29 +234,29 @@ const Game = () => {
     );
   };
 
-  if (error || phase === 'ERROR') return <Container className="mt-5"><Alert variant="danger">{error}</Alert></Container>;
-  if (phase === 'LOADING') return <Container className="mt-5 text-center"><Spinner animation="border" /></Container>;
+  if (error || phase === 'ERROR') return <Container className="mt-5"><Alert variant="danger" className="rounded-4">{error}</Alert></Container>;
+  if (phase === 'LOADING') return <Container className="mt-5 text-center"><Spinner animation="border" variant="info" /></Container>;
 
   return (
-    <Container className="mt-4 mb-5">
+    <Container className="mt-4 mb-5" style={{ fontFamily: "'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
       
-      {/* COINS INDICATOR - TERMINAL STYLE */}
-      <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-2 border-dark">
-        <h4 className="fw-bold m-0 text-uppercase tracking-wider">Control Panel</h4>
-        <Badge bg="dark" className="fs-5 p-2 px-3 shadow-sm rounded-0 border border-warning text-warning">
-          💳 Credits: {runningCoins}
+      {/* HEADER */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h3 className="fw-bold m-0 text-primary">The Last Race</h3>
+        <Badge bg="secondary" text="white" className="fs-6 p-3 shadow-sm rounded-pill border border-white border-2">
+          Total Score: {runningCoins}
         </Badge>
       </div>
 
       {/* MISSION BRIEFING CARD */}
-      <Card className="mb-4 shadow-sm border-dark rounded-0">
-        <Card.Body className="bg-light text-center p-4">
+      <Card className="mb-4 shadow-sm border-0 rounded-4" style={{ backgroundColor: '#f1f8ff' }}>
+        <Card.Body className="text-center p-4">
           <Row>
             <Col md={4} className="d-flex flex-column align-items-center justify-content-center">
-              <h6 className="text-muted text-uppercase fw-bold">Origin Point</h6>
+              <span className="text-muted fw-bold mb-1">START STATION</span>
               {phase === 'SETUP' ? (
-                <Badge bg="secondary" className="p-2 fs-5 shadow-sm text-uppercase tracking-wider rounded-0">
-                  🔒 Encrypted
+                <Badge bg="secondary" className="p-2 fs-5 shadow-sm rounded-pill opacity-50">
+                  [ ENCRYPTED ]
                 </Badge>
               ) : (
                 <h3 className="text-success fw-bold m-0">{gameData?.start?.name}</h3>
@@ -262,23 +265,22 @@ const Game = () => {
 
             <Col md={4} className="d-flex align-items-center justify-content-center my-3 my-md-0">
               {phase === 'SETUP' ? (
-                <div className="text-danger d-flex align-items-center gap-2">
-                  <Spinner animation="grow" variant="danger" size="sm" />
-                  <span className="fw-bold tracking-wider">STANDBY MODE</span>
-                  <Spinner animation="grow" variant="danger" size="sm" />
+                <div className="text-info d-flex align-items-center gap-2 fw-bold fs-5">
+                  <Spinner animation="border" variant="info" size="sm" />
+                  System Standby...
                 </div>
               ) : (
-                <Badge bg="dark" className="fs-6 py-2 px-3 rounded-0 text-warning">
-                  ► Min. {gameData?.minimum_distance} Stops Required ►
+                <Badge bg="info" className="fs-6 py-2 px-4 rounded-pill shadow-sm text-white">
+                  Minimum Stops Required: {gameData?.minimum_distance}
                 </Badge>
               )}
             </Col>
 
             <Col md={4} className="d-flex flex-column align-items-center justify-content-center">
-              <h6 className="text-muted text-uppercase fw-bold">Target Destination</h6>
+              <span className="text-muted fw-bold mb-1">GOAL STATION</span>
               {phase === 'SETUP' ? (
-                <Badge bg="secondary" className="p-2 fs-5 shadow-sm text-uppercase tracking-wider rounded-0">
-                  🔒 Encrypted
+                <Badge bg="secondary" className="p-2 fs-5 shadow-sm rounded-pill opacity-50">
+                  [ ENCRYPTED ]
                 </Badge>
               ) : (
                 <h3 className="text-danger fw-bold m-0">{gameData?.target?.name}</h3>
@@ -288,89 +290,90 @@ const Game = () => {
         </Card.Body>
       </Card>
 
-      {/* --- SETUP --- */}
+      {/* --- PHASE 1: SETUP --- */}
       {phase === 'SETUP' && (
-        <Card className="shadow-lg border-0 slide-in">
-          <Card.Header className="bg-dark text-white text-center py-3">
-            <h4 className="fw-bold m-0">📡 System Calibration: Network Overview</h4>
+        <Card className="shadow-sm border-0 slide-in rounded-4">
+          <Card.Header className="bg-primary bg-gradient text-white text-center py-3 rounded-top-4 border-0">
+            <h4 className="fw-bold m-0">Phase 1: Network Memorization</h4>
           </Card.Header>
-          <Card.Body className="p-4 text-center bg-white">
-            <p className="text-muted fs-5 mb-4">Memorize the connection pathways. The visual grid will disconnect during active navigation.</p>
+          <Card.Body className="p-4 text-center bg-white rounded-bottom-4">
+            <p className="text-muted fs-5 mb-4">Analyze the network structure. Navigation lines will be concealed upon protocol initiation.</p>
             
             {renderMetroMap(false)}
 
-            <Button variant="outline-dark" size="lg" onClick={handleStartPlanning} className="mt-2 px-5 py-3 fw-bold border-2 text-uppercase">
-              Initiate Navigation Protocol ⚡
+            <Button variant="primary" size="lg" onClick={handleStartPlanning} className="mt-3 px-5 py-3 fw-bold rounded-pill shadow-sm">
+              Start Route Selection
             </Button>
           </Card.Body>
         </Card>
       )}
 
-      {/* --- PLANNING --- */}
+      {/* --- PHASE 2: PLANNING --- */}
       {phase === 'PLANNING' && (
-        <Card className="shadow-lg border-0 fade-in">
-          <Card.Header className="bg-warning text-dark text-center py-3">
-            <h4 className="fw-bold m-0">🕹️ Active Navigation Override</h4>
+        <Card className="shadow-sm border-0 fade-in rounded-4">
+          <Card.Header className="bg-info bg-gradient text-white text-center py-3 rounded-top-4 border-0">
+            <h4 className="fw-bold m-0">Phase 2: Draw Your Path</h4>
           </Card.Header>
-          <Card.Body className="p-4 bg-white">
+          <Card.Body className="p-4 bg-white rounded-bottom-4">
             <div className="text-center mb-4">
-              <h5 className={`fw-bold text-uppercase ${timeLeft <= 15 ? 'text-danger' : 'text-dark'}`}>
+              <h5 className={`fw-bold ${timeLeft <= 15 ? 'text-danger' : 'text-secondary'}`}>
                 Time Remaining: {timeLeft}s
               </h5>
               <ProgressBar 
-                striped 
                 animated 
-                variant={timeLeft <= 15 ? "danger" : "dark"} 
+                variant={timeLeft <= 15 ? "danger" : "info"} 
                 now={(timeLeft / 90) * 100} 
-                style={{ height: '15px', backgroundColor: '#e9ecef' }} 
-                className="shadow-sm rounded-0" 
+                style={{ height: '18px', backgroundColor: '#e9ecef', borderRadius: '10px' }} 
+                className="shadow-sm mt-2" 
               />
             </div>
 
             {renderMetroMap(true)}
 
             <Row className="mt-4 gx-4">
+              {/* CHIP CLOUD - Left Side */}
               <Col md={6}>
-                <h5 className="text-center mb-3 fw-bold text-uppercase border-bottom pb-2">Available Connections</h5>
-                <div style={{ maxHeight: '280px', overflowY: 'auto' }} className="border border-dark p-2 bg-light rounded-0">
-                  <ListGroup variant="flush">
-                    {gameData?.segments.map(seg => {
-                      if (selectedSegments.some(s => s.id === seg.id)) return null; 
-                      const btnColor = getLineColor(seg.name);
-                      
-                      return (
-                        <ListGroup.Item key={seg.id} className="d-flex justify-content-between align-items-center mb-2 rounded-0 border border-secondary shadow-sm">
-                          <div className="d-flex align-items-center">
-                            <div style={{ width: '10px', height: '10px', backgroundColor: btnColor, marginRight: '12px' }}></div>
-                            <span className="fw-bold text-dark">{seg.name}</span>
-                          </div>
-                          <Button variant="dark" size="sm" onClick={() => handleAddSegment(seg)} className="fw-bold rounded-0">
-                            + ADD
-                          </Button>
-                        </ListGroup.Item>
-                      );
-                    })}
-                  </ListGroup>
+                <h5 className="text-center mb-3 fw-bold text-primary">Available Segments</h5>
+                <div className="d-flex flex-wrap gap-2 justify-content-center p-3 bg-light rounded-4 border border-light shadow-sm" style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                  {gameData?.segments.map(seg => {
+                    if (selectedSegments.some(s => s.id === seg.id)) return null; 
+                    const btnColor = getLineColor(seg.name);
+                    
+                    return (
+                      <Button
+                        key={seg.id}
+                        variant="light"
+                        size="sm"
+                        className="rounded-pill px-3 py-2 fw-bold shadow-sm border transition-hover"
+                        style={{ color: '#495057', borderColor: '#dee2e6' }}
+                        onClick={() => handleAddSegment(seg)}
+                      >
+                        <div style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: btnColor, borderRadius: '50%', marginRight: '6px' }}></div>
+                        {seg.name} <span className="text-primary ms-1">+</span>
+                      </Button>
+                    );
+                  })}
                 </div>
               </Col>
 
+              {/* LIST BOX - Right Side */}
               <Col md={6}>
-                <h5 className="text-center mb-3 fw-bold text-uppercase border-bottom pb-2">Formulated Route</h5>
-                <div style={{ minHeight: '230px' }} className="border border-primary p-3 bg-white shadow-sm mb-3 rounded-0">
+                <h5 className="text-center mb-3 fw-bold text-primary">Planned Route</h5>
+                <div style={{ minHeight: '230px' }} className="border-2 border-primary border p-3 bg-white shadow-sm mb-3 rounded-4">
                   {selectedSegments.length === 0 ? (
                     <div className="text-center text-muted mt-5">
-                      <p className="fs-5 mb-1">Route array is empty.</p>
-                      <small>Inject connections from the left panel.</small>
+                      <p className="fs-5 mb-1">Route is empty.</p>
+                      <small>Select segments from the left to draw them.</small>
                     </div>
                   ) : (
                     <ListGroup variant="flush">
                       {selectedSegments.map(seg => {
                         const bdColor = getLineColor(seg.name);
                         return (
-                          <ListGroup.Item key={seg.id} className="d-flex justify-content-between align-items-center mb-2 border border-dark rounded-0 shadow-sm" style={{ borderLeft: `8px solid ${bdColor} !important` }}>
-                            <span className="fw-bold">{seg.name}</span>
-                            <Button variant="outline-danger" size="sm" onClick={() => handleRemoveSegment(seg.id)} className="fw-bold rounded-0">
-                              REMOVE
+                          <ListGroup.Item key={seg.id} className="d-flex justify-content-between align-items-center mb-2 rounded-3 shadow-sm border-0" style={{ backgroundColor: '#f8f9fa', borderLeft: `6px solid ${bdColor} !important` }}>
+                            <span className="fw-bold text-dark">{seg.name}</span>
+                            <Button variant="danger" size="sm" onClick={() => handleRemoveSegment(seg.id)} className="fw-bold rounded-circle">
+                              ✕
                             </Button>
                           </ListGroup.Item>
                         );
@@ -378,42 +381,46 @@ const Game = () => {
                     </ListGroup>
                   )}
                 </div>
-                <Button 
-                  variant="success" 
-                  size="lg"
-                  className="w-100 py-3 fw-bold shadow-sm rounded-0 text-uppercase border-2 border-dark"
-                  disabled={selectedSegments.length === 0 || isExecuting}
-                  onClick={handleExecuteRoute}
-                >
-                  {isExecuting ? <Spinner size="sm" animation="border" /> : 'Execute Sequence'}
-                </Button>
+                <div className="d-flex justify-content-center">
+                  <Button 
+                    variant="success" 
+                    size="lg"
+                    className="px-5 py-3 fw-bold shadow-sm rounded-pill text-white"
+                    disabled={selectedSegments.length === 0 || isExecuting}
+                    onClick={handleExecuteRoute}
+                  >
+                    {isExecuting ? <Spinner size="sm" animation="border" /> : 'Submit Final Route'}
+                  </Button>
+                </div>
               </Col>
             </Row>
           </Card.Body>
         </Card>
       )}
 
-      {/* --- RESULT --- */}
+      {/* --- PHASE 3: RESULT --- */}
       {phase === 'RESULT' && journeyResult && (
-        <Card className="shadow-lg mt-4 border-dark rounded-0 slide-in">
-          <Card.Header className="bg-dark text-white text-center py-3">
-            <h4 className="fw-bold m-0">📊 Mission Debrief</h4>
+        <Card className="shadow-sm mt-4 border-0 rounded-4 slide-in">
+          <Card.Header className="bg-primary bg-gradient text-white text-center py-3 rounded-top-4 border-0">
+            <h4 className="fw-bold m-0">Mission Report</h4>
           </Card.Header>
-          <Card.Body className="p-5 text-center bg-light">
-            <Alert variant={journeyResult.valid ? "success" : "danger"} className="shadow-sm border-0 py-4 rounded-0">
-              <Alert.Heading className="display-6 fw-bold text-uppercase">{journeyResult.valid ? "Sequence Verified" : "System Crash"}</Alert.Heading>
-              <p className="fs-5 mb-0 mt-3 font-monospace">{journeyResult.message}</p>
+          <Card.Body className="p-5 text-center bg-white rounded-bottom-4">
+            <Alert variant={journeyResult.valid ? "success" : "danger"} className="shadow-sm border-0 py-4 rounded-4">
+              <Alert.Heading className="display-6 fw-bold">
+                {journeyResult.valid ? "Validation Successful" : "Validation Failed"}
+              </Alert.Heading>
+              <p className="fs-5 mb-0 mt-3">{journeyResult.message}</p>
             </Alert>
 
             {journeyResult.valid && journeyResult.log && (
-              <ListGroup className="mt-4 text-start mx-auto shadow-sm font-monospace" style={{ maxWidth: '600px' }}>
+              <ListGroup className="mt-4 text-start mx-auto shadow-sm rounded-4" style={{ maxWidth: '600px' }}>
                 {journeyResult.log.map((logItem, index) => (
                   <ListGroup.Item 
                     key={index} 
-                    className={`d-flex justify-content-between align-items-center p-3 rounded-0 border-dark transition-all ${index <= visibleLogIndex ? 'opacity-100' : 'd-none'}`}
+                    className={`d-flex justify-content-between align-items-center p-3 border-0 border-bottom transition-all ${index <= visibleLogIndex ? 'opacity-100' : 'd-none'}`}
                   >
-                    <span className="fs-6"><strong>Log {logItem.step}:</strong> {logItem.event}</span>
-                    <Badge bg={logItem.effect >= 0 ? "success" : "danger"} className="fs-6 px-3 rounded-0 border border-dark">
+                    <span className="fs-6 text-secondary"><strong>Step {logItem.step}:</strong> {logItem.event}</span>
+                    <Badge bg={logItem.effect >= 0 ? "success" : "danger"} className="fs-6 px-3 rounded-pill">
                       {logItem.effect > 0 ? '+' : ''}{logItem.effect}
                     </Badge>
                   </ListGroup.Item>
@@ -423,9 +430,9 @@ const Game = () => {
 
             {(!journeyResult.valid || visibleLogIndex === journeyResult.log.length - 1) && (
               <div className="mt-5 fade-in">
-                <h2 className="fw-bold mb-4 text-uppercase">Total Credits: <span className={runningCoins > 0 ? 'text-success' : 'text-danger'}>{runningCoins}</span></h2>
-                <Button variant="outline-dark" size="lg" onClick={handlePlayAgain} className="px-5 py-3 shadow-sm fw-bold border-2 text-uppercase rounded-0">
-                  Reboot System
+                <h2 className="fw-bold mb-4">Final Score: <span className={runningCoins > 0 ? 'text-success' : 'text-danger'}>{runningCoins}</span></h2>
+                <Button variant="primary" size="lg" onClick={handlePlayAgain} className="px-5 py-3 shadow-sm fw-bold rounded-pill">
+                  Restart Mission
                 </Button>
               </div>
             )}
@@ -440,7 +447,7 @@ const Game = () => {
         .slide-in { animation: slideIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .tracking-wider { letter-spacing: 0.1em; }
+        .transition-hover:hover { filter: brightness(0.95); transform: scale(1.02); }
       `}</style>
     </Container>
   );
