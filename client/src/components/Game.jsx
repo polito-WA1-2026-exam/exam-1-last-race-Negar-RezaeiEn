@@ -11,6 +11,7 @@ const Game = () => {
   const [journeyResult, setJourneyResult] = useState(null);
   const [visibleLogIndex, setVisibleLogIndex] = useState(-1);
 
+  // Initialize game session and fetch network data
   const fetchSetupData = useCallback(async () => {
     setPhase('LOADING');
     try {
@@ -33,17 +34,19 @@ const Game = () => {
     fetchSetupData();
   }, [fetchSetupData]);
 
+  // Handle countdown timer during the planning phase
   useEffect(() => {
     let timer;
     if (phase === 'PLANNING' && timeLeft > 0) {
       timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (phase === 'PLANNING' && timeLeft === 0) {
       clearInterval(timer);
-      handleTimeUp(); 
+      handleExecuteRoute(); 
     }
     return () => clearInterval(timer);
   }, [phase, timeLeft]);
 
+  // Handle sequential rendering of event logs
   useEffect(() => {
     if (phase === 'RESULT' && journeyResult?.valid && journeyResult.log) {
       if (visibleLogIndex < journeyResult.log.length - 1) {
@@ -68,10 +71,6 @@ const Game = () => {
     setSelectedSegments(prev => prev.filter(s => s.id !== segmentId));
   };
 
-  const handleTimeUp = () => {
-    handleExecuteRoute();
-  };
-
   const handlePlayAgain = () => {
     setGameData(null);
     setError(null);
@@ -82,6 +81,7 @@ const Game = () => {
     fetchSetupData(); 
   };
 
+  // Submit the selected route for backend validation
   const handleExecuteRoute = async () => {
     setIsExecuting(true);
     try {
@@ -101,7 +101,7 @@ const Game = () => {
       setJourneyResult(resultData);
       setPhase('RESULT'); 
     } catch (err) {
-      console.error(err);
+      console.error("Execution Error:", err);
       setError(err.message);
       setPhase('ERROR');
     } finally {
@@ -109,6 +109,7 @@ const Game = () => {
     }
   };
 
+  // Calculate dynamic score display during log rendering
   let runningCoins = gameData?.coins || 20;
   if (phase === 'RESULT') {
     if (journeyResult?.valid && visibleLogIndex >= 0) {
@@ -119,6 +120,7 @@ const Game = () => {
     }
   }
 
+  // Memoized SVG coordinates for the metro map
   const stationCoords = useMemo(() => {
     if (!gameData?.stations) return {};
     
@@ -129,14 +131,11 @@ const Game = () => {
       'Bernini': { x: 55, y: 20 },
       'Principi d\'Acaja': { x: 70, y: 20 },
       'Porta Susa': { x: 85, y: 20 },
-
-      // Shifted Re Umberto out of the direct line between Porta Nuova and Vinzaglio!
       'Vinzaglio': { x: 85, y: 50 },
       'Porta Nuova': { x: 55, y: 50 },
       'Marconi': { x: 40, y: 50 },
       'Nizza': { x: 25, y: 50 },
       'Spezia': { x: 10, y: 50 },
-
       'Re Umberto': { x: 70, y: 70 }, 
       'Lingotto': { x: 10, y: 80 },
       'Politecnico': { x: 70, y: 85 },
@@ -155,6 +154,7 @@ const Game = () => {
     return coords;
   }, [gameData]);
 
+  // Determine line colors based on segment name identifiers
   const getLineColor = (segmentName) => {
     const name = segmentName || "";
     if (name.includes('Politecnico') && name.includes('Vinzaglio')) return '#0d6efd';
@@ -240,7 +240,7 @@ const Game = () => {
   return (
     <Container className="mt-4 mb-5" style={{ fontFamily: "'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
       
-      {/* HEADER */}
+      {/* Header Section */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold m-0 text-primary">The Last Race</h3>
         <Badge bg="secondary" text="white" className="fs-6 p-3 shadow-sm rounded-pill border border-white border-2">
@@ -248,7 +248,7 @@ const Game = () => {
         </Badge>
       </div>
 
-      {/* MISSION BRIEFING CARD */}
+      {/* Mission Briefing Section */}
       <Card className="mb-4 shadow-sm border-0 rounded-4" style={{ backgroundColor: '#f1f8ff' }}>
         <Card.Body className="text-center p-4">
           <Row>
@@ -290,7 +290,7 @@ const Game = () => {
         </Card.Body>
       </Card>
 
-      {/* --- PHASE 1: SETUP --- */}
+      {/* Phase 1: Setup & Memorization */}
       {phase === 'SETUP' && (
         <Card className="shadow-sm border-0 slide-in rounded-4">
           <Card.Header className="bg-primary bg-gradient text-white text-center py-3 rounded-top-4 border-0">
@@ -308,7 +308,7 @@ const Game = () => {
         </Card>
       )}
 
-      {/* --- PHASE 2: PLANNING --- */}
+      {/* Phase 2: Route Planning */}
       {phase === 'PLANNING' && (
         <Card className="shadow-sm border-0 fade-in rounded-4">
           <Card.Header className="bg-info bg-gradient text-white text-center py-3 rounded-top-4 border-0">
@@ -331,7 +331,6 @@ const Game = () => {
             {renderMetroMap(true)}
 
             <Row className="mt-4 gx-4">
-              {/* CHIP CLOUD - Left Side */}
               <Col md={6}>
                 <h5 className="text-center mb-3 fw-bold text-primary">Available Segments</h5>
                 <div className="d-flex flex-wrap gap-2 justify-content-center p-3 bg-light rounded-4 border border-light shadow-sm" style={{ maxHeight: '280px', overflowY: 'auto' }}>
@@ -356,7 +355,6 @@ const Game = () => {
                 </div>
               </Col>
 
-              {/* LIST BOX - Right Side */}
               <Col md={6}>
                 <h5 className="text-center mb-3 fw-bold text-primary">Planned Route</h5>
                 <div style={{ minHeight: '230px' }} className="border-2 border-primary border p-3 bg-white shadow-sm mb-3 rounded-4">
@@ -398,7 +396,7 @@ const Game = () => {
         </Card>
       )}
 
-      {/* --- PHASE 3: RESULT --- */}
+      {/* Phase 3: Result & Journey Log */}
       {phase === 'RESULT' && journeyResult && (
         <Card className="shadow-sm mt-4 border-0 rounded-4 slide-in">
           <Card.Header className="bg-primary bg-gradient text-white text-center py-3 rounded-top-4 border-0">

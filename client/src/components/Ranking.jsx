@@ -2,17 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Container, Table, Spinner, Alert, Card, Badge } from 'react-bootstrap';
 
 const Ranking = () => {
-  // --- States for Data and UI Management ---
   const [rankings, setRankings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- Fetch Leaderboard Data from Server ---
+  // Fetch Leaderboard Data
   useEffect(() => {
     const fetchRankings = async () => {
       try {
         const response = await fetch('http://localhost:3001/api/games/ranking', {
-          credentials: 'include' // Needed if your API is protected by isLoggedIn middleware
+          credentials: 'include' 
         });
         
         if (!response.ok) throw new Error('Failed to fetch ranking data.');
@@ -20,7 +19,7 @@ const Ranking = () => {
         const data = await response.json();
         setRankings(data);
       } catch (err) {
-        console.error("Ranking Error:", err);
+        console.error("Ranking Fetch Error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -30,7 +29,6 @@ const Ranking = () => {
     fetchRankings();
   }, []);
 
-  // --- Early Returns for Loading and Error States ---
   if (loading) {
     return (
       <Container className="mt-5 text-center">
@@ -44,14 +42,13 @@ const Ranking = () => {
     return (
       <Container className="mt-5">
         <Alert variant="danger">
-          <h4>Error</h4>
+          <h4>System Error</h4>
           <p>{error}</p>
         </Alert>
       </Container>
     );
   }
 
-  // --- Main UI Render ---
   return (
     <Container className="mt-5">
       <Card className="shadow border-warning">
@@ -76,7 +73,6 @@ const Ranking = () => {
                 {rankings.map((user, index) => (
                   <tr key={index}>
                     <td className="fs-5">
-                      {/* Add medals for the top 3 players */}
                       {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
                     </td>
                     <td className="fw-bold">{user.username}</td>

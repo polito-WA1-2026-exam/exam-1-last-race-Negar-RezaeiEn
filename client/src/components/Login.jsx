@@ -14,17 +14,16 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear previous errors
-    setIsLoading(true); // Enable loading state for the button
+    setError(''); 
+    setIsLoading(true); 
 
     try {
       await login(username, password);
-      navigate('/'); // Redirect to home page upon successful login
+      navigate('/'); 
     } catch (err) {
-      // Standardized and secure error message
       setError('Invalid username or password. Please try again.');
     } finally {
-      setIsLoading(false); // Disable loading state
+      setIsLoading(false); 
     }
   };
 
@@ -38,7 +37,6 @@ const Login = () => {
             </Card.Header>
             <Card.Body className="p-4 p-md-5 bg-light">
               
-              {/* Display error message with Bootstrap styling */}
               {error && (
                 <Alert variant="danger" className="text-center rounded-3">
                   {error}
@@ -50,7 +48,7 @@ const Login = () => {
                   <Form.Label className="fw-bold text-secondary">Agent Username</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Enter your username (e.g., Sam)"
+                    placeholder="Enter your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required

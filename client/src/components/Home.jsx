@@ -1,18 +1,11 @@
 import React, { useContext } from 'react';
 import { Container, Row, Col, Card, Button, ListGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-
-// FIXED: Using named import (with curly braces) instead of default import
-// This matches the export style in your AuthContext.jsx file
 import { AuthContext } from '../AuthContext';
 
 const Home = () => {
-  // Consume the global authentication state
-  const auth = useContext(AuthContext);
-  
-  // Determine if the user is logged in by checking the context values
-  // This gracefully handles different potential state structures (user, loggedIn, etc.)
-  const isLoggedIn = !!(auth && (auth.user || auth.loggedIn || auth.isAuthenticated));
+  const { user } = useContext(AuthContext);
+  const isLoggedIn = !!user;
 
   return (
     <Container className="mt-5 mb-5">
@@ -59,9 +52,6 @@ const Home = () => {
               </ListGroup>
 
               <div className="d-grid gap-2 col-md-8 mx-auto mt-5">
-                {/* Smart Navigation Button: 
-                  Reads the context directly to determine the routing path 
-                */}
                 <Button 
                   as={Link} 
                   to={isLoggedIn ? "/game" : "/login"} 
