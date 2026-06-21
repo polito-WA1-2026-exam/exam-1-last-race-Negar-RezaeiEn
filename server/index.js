@@ -84,14 +84,12 @@ app.delete('/api/sessions/current', (req, res) => {
 
 // --- 3. General Game Data API Routes ---
 
-// --- 3. General Game Data API Routes ---
-
 app.get('/api/games/ranking', isLoggedIn, async (req, res) => {
   try {
     const db = await getDBConnection();
     const rankingQuery = `
       SELECT users.username, 
-        CASE WHEN SUM(games.score) < 0 THEN 0 ELSE SUM(games.score) END AS score 
+        CASE WHEN MAX(games.score) < 0 THEN 0 ELSE MAX(games.score) END AS score 
       FROM games 
       JOIN users ON games.user_id = users.id 
       GROUP BY users.id 
