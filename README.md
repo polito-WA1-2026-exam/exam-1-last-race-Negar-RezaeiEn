@@ -1,6 +1,6 @@
 # Exam #1: "The Last Race"
 
-## Student: sXXXXXX LASTNAME Negar
+## Student: s355324 Rezaei Negar
 
 ## React Client Application Routes
 
@@ -23,7 +23,7 @@
   - response body content: `200 OK` with an empty object
 - GET `/api/game/setup`
   - request parameters: None
-  - response body content: `200 OK` with JSON object `{ start, target, minimum_distance, stations, segments, networkMap, coins }`
+  - response body content: `200 OK` with JSON object `{ start, target, minimum_distance, stations, segments, coins }`
 - POST `/api/game/execute`
   - request parameters and request body content: JSON object `{ startStationId, targetStationId, selectedSegmentIds }`
   - response body content: `200 OK` with JSON object `{ valid, message, finalCoins, log }`
@@ -33,9 +33,9 @@
 
 ## Database Tables
 
-- Table `users` - contains registered users' credentials (id, username, salt, hashed password)
-- Table `stations` - contains the network's stations (id, name, is_interchange)
-- Table `lines` - contains the metro lines available in the network (id, name, color)
+- Table `users` - contains registered users' credentials (id, username, salt, password)
+- Table `stations` - contains the network's stations (id, name)
+- Table `lines` - contains the metro lines available in the network (id, name)
 - Table `segments` - contains the network graph defining connections between two stations on a specific line (id, station_a_id, station_b_id, line_id)
 - Table `events` - contains the random events and their coin effects (id, description, effect)
 - Table `games` - contains logged completed games for the leaderboard (id, user_id, score)
@@ -58,8 +58,8 @@
 ## Users Credentials
 
 - Negar, passWord123!
-- Sam, 123456789 (Has previous successful games)
-- Mike, 123456789 (Has previous successful games)
+- Sam, 9127435395 (Has previous successful games)
+- Mike, 9127435395 (Has previous successful games)
 
 ## Use of AI Tools
 
