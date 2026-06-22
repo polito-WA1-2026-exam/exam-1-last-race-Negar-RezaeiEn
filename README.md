@@ -58,8 +58,8 @@
 ## Users Credentials
 
 - Negar, passWord123!
-- Sam, 9127435395 (Has previous successful games)
-- Mike, 9127435395 (Has previous successful games)
+- Sam, 9127435395 
+- Mike, 9127435395
 
 ## Use of AI Tools
 
